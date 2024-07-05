@@ -32,12 +32,25 @@ export default function Home() {
   const [won, setWon] = useState(false);
   const [guessed, setGuessed] = useState(false);
   const guessRef = useRef<HTMLInputElement>(null);
+  const [speed, setSpeed] = useState(3);
+  const [audio, setAudio] = useState(null);
 
 
   const playDailyMorseSound = () => {
-    const audio = morsify.audio(dailyWord, {
-      unit: 0.2, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
-      fwUnit: 0.3, // period of one Farnsworth unit to control intercharacter and interword gaps
+    if (audio !== null) {
+      console.log(audio)
+      //@ts-ignore
+      let exit = audio.context.state === "running"
+      //@ts-ignore
+      audio.stop()
+      setAudio(null)
+      if (exit) {
+        return
+      }
+    }
+    let audio2 = morsify.audio(dailyWord, {
+      unit: (5 - speed)/10, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
+      fwUnit: (5 - speed)/10, // period of one Farnsworth unit to control intercharacter and interword gaps
       //oscillator: {
       //  type: 'sine', // sine, square, sawtooth, triangle
       //  frequency: 500,  // value in hertz
@@ -47,7 +60,9 @@ export default function Home() {
       //}
     });
 
-    audio.play(); // play audio
+    //@ts-ignore
+    audio2.play(); // play audio
+    setAudio(audio2)
   }
 
   const checkGuess = () => {
@@ -78,6 +93,11 @@ export default function Home() {
           <button onClick={() => {
             playDailyMorseSound();
           }} className=""><GiSpeaker className=" text-6xl"/></button>
+
+          <p>Speed</p>
+          <div className="">
+            <input type="range" min="1" max="5" value={speed} step={1} onChange={val => {console.log(val); setSpeed(Number(val.target.value))}} className="" id=""/>
+          </div>
 
           <div className="flex">
             <input ref={guessRef} className=" bg-transparent border-b border-white font-mono text-2xl text-white text-center focus:outline-none"></input>
