@@ -10,7 +10,7 @@ const dailyWord = words[Math.floor(Math.random() * words.length)]
 export default function Home() {
   const [won, setWon] = useState(false);
   const [guessed, setGuessed] = useState(false);
-  const guessRef = useRef();
+  const guessRef = useRef<HTMLInputElement>(null);
 
 
   const playDailyMorseSound = () => {
@@ -31,7 +31,7 @@ export default function Home() {
 
   const checkGuess = () => {
     setGuessed(true);
-    if (guessRef.current.value === dailyWord) {
+    if (guessRef.current && guessRef.current.value === dailyWord) {
       setWon(true);
       console.log("You win")
     } else {
