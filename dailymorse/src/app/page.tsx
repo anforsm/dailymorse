@@ -6,7 +6,10 @@ import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { MdOutlineKeyboardDoubleArrowRight, MdOutlineKeyboardDoubleArrowLeft } from "react-icons/md";
 import { GiSnail } from "react-icons/gi";
 import { SiRabbitmq } from "react-icons/si";
-const morsify = require('morsify');
+import { useLocalStorage } from "@uidotdev/usehooks";
+import Game from "./game";
+
+const wordsPerDay = 3;
 
 const words = [
   "time", "year", "people", "way", "day",
@@ -31,126 +34,79 @@ const words = [
   "moment", "air", "teacher", "force", "education"
 ];
 
-const dailyWord = words[Math.floor(Math.random() * words.length)]
-const maxSpeed = 5;
-const minSpeed = 1;
+const todaysDate = new Date();
+const startDate = new Date("2024-06-06")
+const day = Math.ceil((todaysDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
+console.log(day)
+
+//const dailyWords = words[day % words.length]
+let dailyWords: string[] = [];
+for (let i = 0; i < wordsPerDay; i++) {
+  dailyWords.push(words[(day * i) % words.length])
+}
+const dailyWord = dailyWords.join(" ");
 
 export default function Home() {
-  const [won, setWon] = useState(false);
-  const [guessed, setGuessed] = useState(false);
-  const guessRef = useRef<HTMLInputElement>(null);
-  const [speed, setSpeed] = useState(3);
-  const [audio, setAudio] = useState(null);
-  const [letters, setLetters] = useState(new Array(0).fill(null));
+  const [currentWordI, setCurrentWordI] = useState(0);
+  const [gameEnded, setGameEnded] = useState(false)
+  const [wonGame, setWonGame] = useState(false)
+  //const [stats, setStats] = useLocalStorage("stats", {
+  //  history: [],
+  //  today: {
+  //    day: day,
+  //    words: [
+  //      {
+  //        word: dailyWord,
+  //        status: "incomplete", // correct, incorrect or incomplete
+  //        guess: null,
+  //      }
+  //    ]
+  //  },
+  //})
 
   //useEffect(() => {
-  //  const dailyWord = words[Math.floor(Math.random() * words.length)]
-  //  setLetters(new Array(dailyWord.length).fill(null));
+  //  if (stats["today"]["day"] !== day) {
+  //    let newStats = {...stats}
+  //    newStats["today"]["day"] = day
+  //    newStats["today"]["words"] = []
+  //    newStats["today"]["words"][0]["word"] = dailyWord
+  //    newStats["today"]["words"][0]["status"] = "incomplete"
+  //    setStats(newStats)
+  //  }
   //}, [])
 
-
-  const playDailyMorseSound = () => {
-    if (audio !== null) {
-      console.log(audio)
-      //@ts-ignore
-      let exit = audio.context.state === "running"
-      //@ts-ignore
-      audio.stop()
-      setAudio(null)
-      if (exit) {
-        return
-      }
-    }
-    let audio2 = morsify.audio(dailyWord, {
-      unit: 0.1, // period of one unit, in seconds, 1.2 / c where c is speed of transmission, in words per minute
-      fwUnit: (5 - speed)/10, // period of one Farnsworth unit to control intercharacter and interword gaps
-      //oscillator: {
-      //  type: 'sine', // sine, square, sawtooth, triangle
-      //  frequency: 500,  // value in hertz
-      //  onended: function () { // event that fires when the tone stops playing
-      //    console.log('ended');
-      //  }
-      //}
-    });
-
-    //@ts-ignore
-    audio2.play(); // play audio
-    setAudio(audio2)
-  }
-
-  const checkGuess = () => {
-    setGuessed(true);
-    if (guessRef.current && guessRef.current.value.toLowerCase() === dailyWord) {
-      setWon(true);
-      console.log("You win")
-    } else {
-      setWon(false);
-      console.log("You lose")
-    }
-  }
-
-
-  useEffect(() => {
-    //const encoded = morsify.encode('SOS'); // ... --- ...
-    //const decoded = morsify.decode('... --- ...'); // SOS
-    //const characters = morsify.characters(); // {'1': {'A': '.-', ...}, ..., '11': {'ㄱ': '.-..', ...}}
-    //audio.stop(); // stop audio
-  }, [])
-
-//<div>
-//            <p>Speed</p>
-//            <div className="">
-//              <input type="range" min="1" max="5" value={speed} step={1} onChange={val => {console.log(val); setSpeed(Number(val.target.value))}} className="" id=""/>
-//            </div>
-//          </div>
-
-
-  //<GiSpeaker className=" text-6xl"/>
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-cyan-700 font-mono">
-      <div>
+      <div className="flex flex-col items-center">
         <h1 className=" text-6xl">Daily Morse</h1>
-        <div className=" h-24"></div>
-        <div className="flex flex-col items-center justify-center gap-4">
-          <button onClick={() => {
-            playDailyMorseSound();
-          }} className="border border-white rounded-md px-4 py-2 text-2xl">
-            Play Sound
-          </button>
+        <div className=" h-20"></div>
 
-          <div className="flex flex-col items-center">
-            <div className="text-4xl flex gap-2">
-              <button onClick={() => setSpeed(prev => prev > minSpeed ? prev - 1 : prev)}><MdOutlineKeyboardDoubleArrowLeft /></button>
-              <p>{speed}</p>
-              <button onClick={() => setSpeed(prev => prev < maxSpeed ? prev + 1 : prev)}><MdOutlineKeyboardDoubleArrowRight /></button>
-            </div>
-            <p className=" text-xs">Speed</p>
-          </div>
-
-          <div className="h-4"/>
-
-          
-          {false && <div className="flex">
-            {letters.map((letter, i) => {
-              return <div className="flex flex-col" key={i}>
-                <p>*</p>
-                <p>_</p>
-              </div>
-            })}
-          </div>}
-
-          <div className="flex">
-            <div className="w-8 h-2"/>
-            <div className="flex border border-white rouned-md">
-              <input pattern="[a-zA-Z]*" ref={guessRef} className=" bg-transparent font-mono text-2xl text-white text-center focus:outline-none uppercase"></input>
-              <button className="aspect-square h-16 text-6xl border-l" onClick={() => {
-                checkGuess()
-              }}><MdOutlineKeyboardArrowRight /></button>
-            </div>
-          </div>
-
-          {guessed && (won ? <p>You win!!!!!!!!!</p> : <p>You lose, the word was {dailyWord}</p>)}
-        </div>
+        
+        <Game 
+          word={dailyWords[currentWordI]} 
+          onGameEnded={(correct: boolean) => {
+            setGameEnded(true)
+            setWonGame(correct)
+          }}
+          onSoundPlay={(intercharacterGap: number) => console.log(intercharacterGap)}
+          />
+        {gameEnded && <div className="flex items-center mt-2">
+          {<p>{
+            wonGame ? 
+            "You deciphered the word!" :
+            "Incorrect, the word was " + dailyWords[currentWordI] + "."
+          }</p>}
+          {currentWordI + 1 < dailyWords.length && <button 
+            onClick={() => {
+              setCurrentWordI(currentWordI + 1)
+              setGameEnded(false)
+            }}
+            className="border-b border-white px-1 ml-1"
+            >Next Word
+          </button>}
+          <p className="ml-1">{`[${currentWordI + 1}/${dailyWords.length}]`}</p>
+        </div>}
+        
 
       </div>
     </main>
