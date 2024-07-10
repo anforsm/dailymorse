@@ -77,6 +77,11 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-cyan-700 font-mono">
+      <div className="absolute top-0 left-0">
+        <p>Words Deciphered: 0</p>
+        <p>Daily Streak: 0</p>
+      </div>
+
       <div className="flex flex-col items-center">
         <h1 className=" text-6xl">Daily Morse</h1>
         <div className=" h-20"></div>

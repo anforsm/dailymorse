@@ -87,8 +87,8 @@ const Game = (props: any) => {
     <div className="h-4"/>
 
     <div className="flex">
-      <div className="flex border border-white rouned-md">
       <div className="w-8 h-2"/>
+      <div className="flex border border-white rouned-md">
         <input 
           pattern="[a-zA-Z]*" 
           className=" bg-transparent font-mono text-2xl text-white text-center focus:outline-none uppercase"
