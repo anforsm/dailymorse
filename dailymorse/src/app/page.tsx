@@ -1,13 +1,7 @@
 "use client";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { GiSpeaker } from "react-icons/gi";
-import { MdOutlineKeyboardArrowRight } from "react-icons/md";
-import { MdOutlineKeyboardDoubleArrowRight, MdOutlineKeyboardDoubleArrowLeft } from "react-icons/md";
-import { GiSnail } from "react-icons/gi";
-import { SiRabbitmq } from "react-icons/si";
-import { useLocalStorage } from "@uidotdev/usehooks";
-import Game from "./game";
+import GameWrapper from "./gamewrapper";
+
 
 const wordsPerDay = 3;
 
@@ -36,84 +30,59 @@ const words = [
 
 const todaysDate = new Date();
 const startDate = new Date("2024-06-06")
-const day = Math.ceil((todaysDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
-console.log(day)
+const dayConst = Math.ceil((todaysDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
 
-//const dailyWords = words[day % words.length]
-let dailyWords: string[] = [];
-for (let i = 0; i < wordsPerDay; i++) {
-  dailyWords.push(words[(day * i) % words.length])
+const getDailyWords = (day: number) => {
+  let dailyWordsTemp: string[] = [];
+  for (let i = 0; i < wordsPerDay; i++) {
+    dailyWordsTemp.push(words[(day * i) % words.length])
+  }
+  return dailyWordsTemp
 }
-const dailyWord = dailyWords.join(" ");
+
 
 export default function Home() {
-  const [currentWordI, setCurrentWordI] = useState(0);
-  const [gameEnded, setGameEnded] = useState(false)
-  const [wonGame, setWonGame] = useState(false)
-  //const [stats, setStats] = useLocalStorage("stats", {
-  //  history: [],
-  //  today: {
-  //    day: day,
-  //    words: [
-  //      {
-  //        word: dailyWord,
-  //        status: "incomplete", // correct, incorrect or incomplete
-  //        guess: null,
-  //      }
-  //    ]
-  //  },
-  //})
+  const [devMode, setDevMode] = useState(false);
+  const [day, setDay] = useState(dayConst);
+  const [dailyWords, setDailyWords] = useState(getDailyWords(dayConst));
 
-  //useEffect(() => {
-  //  if (stats["today"]["day"] !== day) {
-  //    let newStats = {...stats}
-  //    newStats["today"]["day"] = day
-  //    newStats["today"]["words"] = []
-  //    newStats["today"]["words"][0]["word"] = dailyWord
-  //    newStats["today"]["words"][0]["status"] = "incomplete"
-  //    setStats(newStats)
-  //  }
-  //}, [])
+  useEffect(() => {
+    setDevMode(window.location.hostname === "localhost" && window.location.hash === "#dev")
+  }, [])
+
+  useEffect(() => {
+    // @ts-ignore
+    setDailyWords(getDailyWords(day))
+  }, [day])
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-cyan-700 font-mono">
-      <div className="absolute top-0 left-0">
-        <p>Words Deciphered: 0</p>
-        <p>Daily Streak: 0</p>
-      </div>
-
-      <div className="flex flex-col items-center">
-        <h1 className=" text-6xl">Daily Morse</h1>
-        <div className=" h-20"></div>
-
+      {devMode && <div className="absolute top-0 right-8 text-red-800 flex flex-col">
+        <p>DEV MODE</p>
+        <div className="flex gap-4">
+          <button onClick={() => {
+            setDay(day - 1)
+          }}>&lt;</button>
+          <p className="mx-4">Day: {day}</p>
+          <button onClick={() => {
+            setDay(day + 1)
+          }}>&gt;</button>
+        </div>
+        <button onClick={() => {
+          localStorage.clear()
+          window.location.reload()
+        }}
+          className="px-2 border border-red-800 rounded-md"
         
-        <Game 
-          word={dailyWords[currentWordI]} 
-          onGameEnded={(correct: boolean) => {
-            setGameEnded(true)
-            setWonGame(correct)
-          }}
-          onSoundPlay={(intercharacterGap: number) => console.log(intercharacterGap)}
-          />
-        {gameEnded && <div className="flex items-center mt-2">
-          {<p>{
-            wonGame ? 
-            "You deciphered the word!" :
-            "Incorrect, the word was " + dailyWords[currentWordI] + "."
-          }</p>}
-          {currentWordI + 1 < dailyWords.length && <button 
-            onClick={() => {
-              setCurrentWordI(currentWordI + 1)
-              setGameEnded(false)
-            }}
-            className="border-b border-white px-1 ml-1"
-            >Next Word
-          </button>}
-          <p className="ml-1">{`[${currentWordI + 1}/${dailyWords.length}]`}</p>
-        </div>}
-        
+        >Reset Stats</button>
+        <p>Answer: {dailyWords.join(" ")}</p>
+      </div>}
 
-      </div>
+      <GameWrapper
+        day={day}
+        words={dailyWords}
+      />
+
     </main>
   );
 }

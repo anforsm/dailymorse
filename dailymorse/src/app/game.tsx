@@ -5,13 +5,15 @@ import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { MdOutlineKeyboardDoubleArrowRight, MdOutlineKeyboardDoubleArrowLeft } from "react-icons/md";
 
 const morse = require('morse-decoder');
+const speeds = [0, 5, 10, 15, 20, 25]
 
 
-const playMorseSound = (text: string, intercharacterGap: number) => {
+const playMorseSound = (text: string, wpm: number) => {
   let ended = false;
   let audio = morse.audio(text, {
-    unit: 0.1,
-    fwUnit: intercharacterGap,
+    //unit: 0.1,
+    //fwUnit: intercharacterGap,
+    wpm: wpm,
     oscillator: {
       type: 'sine', // sine, square, sawtooth, triangle
       frequency: 500,  // value in hertz
@@ -53,7 +55,7 @@ const Game = (props: any) => {
     setGameEnded(true)
 
     if (props.onGameEnded)
-      props.onGameEnded(guess === props.word)
+      props.onGameEnded(guess === props.word, guess)
   }
 
   return <div className="flex flex-col items-center justify-center gap-4">
@@ -65,10 +67,10 @@ const Game = (props: any) => {
       }
 
       console.log("hi")
-      let intercharacterGap = (5 - speed) / 10
-      let cancel = playMorseSound(props.word, intercharacterGap)
+      let wpm = speeds[speed]
+      let cancel = playMorseSound(props.word, wpm)
       if (props.onSoundPlay)
-        props.onSoundPlay(intercharacterGap)
+        props.onSoundPlay(wpm)
       setCancelSound(() => cancel)
 
     }} className="border border-white rounded-md px-4 py-2 text-2xl">
@@ -76,12 +78,13 @@ const Game = (props: any) => {
     </button>
 
     <div className="flex flex-col items-center">
+      <p className=" text-sm">Speed</p>
       <div className="text-4xl flex gap-2">
         <button onClick={() => setSpeed(prev => prev > minSpeed ? prev - 1 : prev)}><MdOutlineKeyboardDoubleArrowLeft /></button>
         <p>{speed}</p>
         <button onClick={() => setSpeed(prev => prev < maxSpeed ? prev + 1 : prev)}><MdOutlineKeyboardDoubleArrowRight /></button>
       </div>
-      <p className=" text-xs">Speed</p>
+      <p className="text-xs">{speeds[speed]} wpm</p>
     </div>
 
     <div className="h-4"/>
